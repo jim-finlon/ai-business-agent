@@ -1,0 +1,15 @@
+---
+description: Service layer patterns
+globs: ["**/Services/*.cs"]
+---
+
+- Services should be stateless and injected via DI.
+- Use async/await for all I/O operations.
+- Return DTOs or domain models, not EF entities.
+- Validate inputs using FluentValidation or guard clauses.
+- Use proper error handling with custom exceptions.
+- Implement proper logging for service operations.
+- Use repository pattern for data access abstraction.
+- Keep services focused on single responsibility.
+- Use dependency injection for all dependencies.
+- Implement proper cancellation token support for long-running operations.

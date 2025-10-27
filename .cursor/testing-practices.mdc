@@ -1,0 +1,16 @@
+---
+description: Unit and integration test rules
+globs: ["**/Tests/**/*.cs"]
+---
+
+- Use xUnit or NUnit for test projects.
+- Mock dependencies using Moq or substitute interfaces.
+- Prefer Arrange-Act-Assert structure.
+- Avoid testing private methods—test behavior via public interfaces.
+- Use descriptive test method names that explain the scenario.
+- Implement proper test data builders for complex objects.
+- Use test containers for integration tests with databases.
+- Mock external dependencies and APIs.
+- Test both success and failure scenarios.
+- Use parameterized tests for testing multiple scenarios.
+- Implement proper test cleanup and isolation.

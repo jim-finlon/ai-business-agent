@@ -1,0 +1,17 @@
+---
+description: EF Core usage patterns
+globs: ["**/Data/**/*.cs", "**/DbContext.cs", "**/Models/*.cs"]
+---
+
+- Use `DbContext` per request via DI.
+- Avoid lazy loading—prefer explicit `Include()`.
+- Use migrations for schema changes.
+- Keep entity configurations in separate `EntityTypeConfiguration` classes.
+- Use proper indexing for performance.
+- Implement soft delete patterns where appropriate.
+- Use value objects for complex types.
+- Avoid exposing EF entities directly to API consumers.
+- Use proper connection string management.
+- Implement proper transaction handling.
+- Use async methods for all database operations.
+- Configure proper query splitting for performance.
