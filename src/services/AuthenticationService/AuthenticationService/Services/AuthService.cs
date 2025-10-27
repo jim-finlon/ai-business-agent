@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using AuthenticationService.Models;
 using AuthenticationService.DTOs;
 using BCrypt.Net;
+using System.Security.Cryptography;
 
 namespace AuthenticationService.Services;
 
@@ -390,28 +391,156 @@ public class AuthService : IAuthService
         return ApiResponse<object>.ErrorResult("Password reset confirmation not implemented yet");
     }
 
-    public async Task<ApiResponse<object>> UpdateUserInfoAsync(Guid userId, UpdateUserRequest request)
-    {
-        // TODO: Implement user info update
-        return ApiResponse<object>.ErrorResult("User info update not implemented yet");
-    }
-
     public async Task<ApiResponse<CreateApiKeyResponse>> CreateApiKeyAsync(Guid userId, CreateApiKeyRequest request)
     {
-        // TODO: Implement API key creation
-        return ApiResponse<CreateApiKeyResponse>.ErrorResult("API key creation not implemented yet");
+        try
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return ApiResponse<CreateApiKeyResponse>.ErrorResult("User not found");
+            }
+
+            // Check if user has reached the maximum number of API keys
+            var existingKeysCount = await _context.ApiKeys
+                .CountAsync(ak => ak.UserId == userId && ak.IsActive);
+            
+            if (existingKeysCount >= 10) // Max 10 API keys per user
+            {
+                return ApiResponse<CreateApiKeyResponse>.ErrorResult("Maximum number of API keys reached (10)");
+            }
+
+            // Generate API key
+            var prefix = "ak_";
+            var randomBytes = new byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomBytes);
+            var apiKeyValue = prefix + Convert.ToBase64String(randomBytes).Replace("+", "-").Replace("/", "_").Replace("=", "");
+
+            var apiKey = new ApiKey
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                KeyName = request.KeyName,
+                KeyHash = BCrypt.Net.BCrypt.HashPassword(apiKeyValue),
+                Prefix = prefix,
+                Scopes = request.Scopes,
+                ExpiresAt = request.ExpiresAt,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.ApiKeys.Add(apiKey);
+            await _context.SaveChangesAsync();
+
+            var response = new CreateApiKeyResponse
+            {
+                Id = apiKey.Id,
+                KeyName = apiKey.KeyName,
+                Prefix = apiKey.Prefix,
+                Scopes = apiKey.Scopes,
+                ExpiresAt = apiKey.ExpiresAt,
+                LastUsedAt = apiKey.LastUsedAt,
+                CreatedAt = apiKey.CreatedAt,
+                IsActive = apiKey.IsActive,
+                ApiKey = apiKeyValue // Only returned once during creation
+            };
+
+            _logger.LogInformation("API key created for user: {UserId}, key: {KeyName}", userId, request.KeyName);
+            return ApiResponse<CreateApiKeyResponse>.SuccessResult(response, "API key created successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating API key for user: {UserId}", userId);
+            return ApiResponse<CreateApiKeyResponse>.ErrorResult("An error occurred while creating API key");
+        }
     }
 
     public async Task<ApiResponse<ApiKeyInfo[]>> GetUserApiKeysAsync(Guid userId)
     {
-        // TODO: Implement get user API keys
-        return ApiResponse<ApiKeyInfo[]>.ErrorResult("Get user API keys not implemented yet");
+        try
+        {
+            var apiKeys = await _context.ApiKeys
+                .Where(ak => ak.UserId == userId)
+                .OrderByDescending(ak => ak.CreatedAt)
+                .Select(ak => new ApiKeyInfo
+                {
+                    Id = ak.Id,
+                    KeyName = ak.KeyName,
+                    Prefix = ak.Prefix,
+                    Scopes = ak.Scopes,
+                    ExpiresAt = ak.ExpiresAt,
+                    LastUsedAt = ak.LastUsedAt,
+                    CreatedAt = ak.CreatedAt,
+                    IsActive = ak.IsActive
+                })
+                .ToArrayAsync();
+
+            return ApiResponse<ApiKeyInfo[]>.SuccessResult(apiKeys);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting API keys for user: {UserId}", userId);
+            return ApiResponse<ApiKeyInfo[]>.ErrorResult("An error occurred while getting API keys");
+        }
     }
 
     public async Task<ApiResponse<object>> RevokeApiKeyAsync(Guid userId, Guid apiKeyId)
     {
-        // TODO: Implement API key revocation
-        return ApiResponse<object>.ErrorResult("API key revocation not implemented yet");
+        try
+        {
+            var apiKey = await _context.ApiKeys
+                .FirstOrDefaultAsync(ak => ak.Id == apiKeyId && ak.UserId == userId);
+
+            if (apiKey == null)
+            {
+                return ApiResponse<object>.ErrorResult("API key not found");
+            }
+
+            apiKey.IsRevoked = true;
+            apiKey.RevokedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("API key revoked for user: {UserId}, key: {KeyId}", userId, apiKeyId);
+            return ApiResponse<object>.SuccessResult(null, "API key revoked successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error revoking API key for user: {UserId}, key: {KeyId}", userId, apiKeyId);
+            return ApiResponse<object>.ErrorResult("An error occurred while revoking API key");
+        }
+    }
+
+    public async Task<ApiResponse<object>> UpdateUserInfoAsync(Guid userId, UpdateUserRequest request)
+    {
+        try
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return ApiResponse<object>.ErrorResult("User not found");
+            }
+
+            // Update only provided fields
+            if (!string.IsNullOrEmpty(request.FullName))
+                user.FullName = request.FullName;
+            
+            if (!string.IsNullOrEmpty(request.AvatarUrl))
+                user.AvatarUrl = request.AvatarUrl;
+            
+            if (!string.IsNullOrEmpty(request.PhoneNumber))
+                user.PhoneNumber = request.PhoneNumber;
+
+            user.ModifiedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("User info updated for user: {UserId}", userId);
+            return ApiResponse<object>.SuccessResult(null, "User information updated successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating user info for user: {UserId}", userId);
+            return ApiResponse<object>.ErrorResult("An error occurred while updating user information");
+        }
     }
 }
 
