@@ -1,0 +1,16 @@
+---
+description: Exception and logging strategy
+globs: ["**/*.cs"]
+---
+
+- Use middleware for global exception handling.
+- Log exceptions with structured logging (e.g., Serilog).
+- Avoid catching general `Exception` unless rethrowing or logging.
+- Use `ProblemDetails` for API error responses.
+- Implement proper error codes and messages for API consumers.
+- Use correlation IDs for request tracing.
+- Log at appropriate levels (Debug, Info, Warning, Error, Fatal).
+- Include relevant context in log messages.
+- Use structured logging with proper properties.
+- Implement health checks for monitoring.
+- Handle validation errors gracefully with proper HTTP status codes.

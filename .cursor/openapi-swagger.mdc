@@ -1,0 +1,17 @@
+---
+description: API documentation rules
+globs: ["**/Startup.cs", "**/Program.cs", "**/Controllers/*.cs"]
+---
+
+- Use `Swashbuckle.AspNetCore` for Swagger generation.
+- Annotate endpoints with `[ProducesResponseType]` and `[Consumes]`.
+- Group endpoints by tag for clarity.
+- Hide internal or admin endpoints from public docs.
+- Use proper HTTP status codes for responses.
+- Document request/response models with XML comments.
+- Use OpenAPI 3.0 specifications.
+- Implement proper API versioning.
+- Use consistent naming conventions for endpoints.
+- Document authentication and authorization requirements.
+- Include examples in API documentation.
+- Use proper content types (application/json, etc.).

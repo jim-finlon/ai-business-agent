@@ -1,0 +1,15 @@
+---
+description: SDK and package management
+globs: ["**/*.csproj"]
+---
+
+- Target latest LTS SDK (e.g., net9.0).
+- Use `PackageReference` for all dependencies.
+- Avoid transitive dependencies from legacy packages.
+- Lock versions for critical packages (e.g., EF Core, Serilog).
+- Use PackageReference format instead of packages.config.
+- Specify exact versions for security-critical packages.
+- Use Directory.Packages.props for centralized package management.
+- Avoid package downgrades unless necessary.
+- Use analyzers for code quality and security.
+- Keep packages up to date for security patches.

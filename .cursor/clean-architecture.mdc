@@ -1,0 +1,14 @@
+---
+description: Enforce Clean Architecture boundaries
+globs: ["**/*.cs"]
+alwaysApply: true
+---
+
+- Controllers should only depend on application interfaces, not concrete implementations.
+- Domain models must not reference infrastructure or external libraries.
+- Use MediatR for application layer orchestration.
+- Avoid business logic in controllers—delegate to services or handlers.
+- Follow dependency inversion principle - depend on abstractions, not concretions.
+- Keep controllers thin - they should only handle HTTP concerns.
+- Use CQRS pattern for complex business operations.
+- Implement proper separation of concerns between layers.

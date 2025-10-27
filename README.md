@@ -103,6 +103,7 @@ This project is broken down into 15 discrete task packages. See TASK_BREAKDOWN.m
 - **SYSTEM_REQUIREMENTS.md** - Complete technical specification
 - **TASK_BREAKDOWN.md** - Work packages for distribution
 - **AI_ASSISTANT_GUIDE.md** - Coordination guide for AI assistants
+- **.cursor/README.md** - Cursor rule sets for development standards
 
 ---
 
